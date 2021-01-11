@@ -2,7 +2,9 @@
 title: "Transit Cost Project"
 author: "Arthur Gailes"
 date: "1/7/2021"
-output: github_document
+output: 
+  github_document: default
+  html_notebook: default
 editor_options: 
   chunk_output_type: inline
 always_allow_html: true
