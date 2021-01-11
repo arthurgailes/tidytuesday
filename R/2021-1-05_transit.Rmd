@@ -2,29 +2,142 @@
 title: "Transit Cost Project"
 author: "Arthur Gailes"
 date: "1/7/2021"
-output: html_document
+output: github_document
+editor_options: 
+  chunk_output_type: inline
+always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message=F)
+sapply(c('tidyverse','tidytuesdayR','r2d3','here'), require, character.only=T)
+knitr::opts_knit$set(root.dir = here())
 ```
 
-## R Markdown
+## Transit Cost Project
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Load the weekly Data
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Dowload the weekly data and make available in the `tt` object.
 
-```{r cars}
-summary(cars)
+```{r download}
+tt <- tt_load("2021-01-05")
+trans_raw <- tt[[1]]
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+# Readme
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+Take a look at the readme for the weekly data to get insight on the dataset.
+This includes a data dictionary, source, and a link to an article on the data.
+
+```{r Readme, eval = interactive()}
+tt
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+# Glimpse Data
+
+Take an initial look at the format of the data available.
+
+```{r Glimpse}
+# look at data and save to dataframe
+tt %>% 
+  map(glimpse)
+
+```
+
+# Wrangle data
+
+Calculate average timeline for projects by start year, for projects that have already started.
+```{r}
+trans <- trans_raw %>% 
+  mutate(start_year = as.numeric(year), end_year=as.numeric(end_year), 
+    year_length = end_year-start_year) %>% 
+  filter(!is.na(year_length), start_year <2021) %>% 
+  group_by(start_year) %>% 
+  summarize(year_length = mean(year_length))
+trans
+```
+
+# R2D3
+
+Visualize project timeline by year - simple.
+
+```{d3 data=trans, results='hold'}
+
+const fig = {
+  margin: {top:50,right:20, bottom:20, left: 40}
+};
+fig.height = height - fig.margin.top - fig.margin.bottom;
+fig.width = width - fig.margin.right - fig.margin.left;
+
+var x = d3.scaleLinear()
+          .range([0, fig.width])
+          .domain(d3.extent(data, d=> d.start_year))
+          ;
+var y = d3.scaleLinear()
+          .range([fig.height, fig.margin.top])
+          .domain([0, d3.max(data, d=> d.year_length)])
+          ;
+const xAxis = d3.axisBottom(x)
+  .tickFormat(d3.format(".0f"))
+  .ticks(20)
+  ;
+          
+// Add bars
+svg
+  .attr('height', height)
+  .attr('width', width)
+  .append('g')
+  .attr('transform','translate(' + fig.margin.left + ',' + 0 + ')')
+  .selectAll('rect')
+  .data(data)
+  .join(enter=> enter
+    .append('rect')
+      .attr('width', fig.width/(d3.max(data, d1=> d1.start_year) - d3.min(data, d1=>d1.start_year)))
+      .attr('height', d=> fig.height - y(d.year_length))
+      .attr('y', d=> y(d.year_length))
+      .attr('x',d=> x(d.start_year))
+      .attr('fill', 'red')
+      .attr('stroke','black')
+      )
+      
+// Axes
+svg.append('g')
+  .attr('transform','translate(' + fig.margin.left + ',' + fig.height + ')')
+  .call(xAxis)
+  .selectAll('text')
+  .style('text-anchor','end')
+  .attr('transform','rotate(-65)')
+  .attr("dx", "-.8em")
+  .attr("dy", ".15em")
+  ;
+  
+svg.append('g')
+  .attr('transform','translate(' + fig.margin.left + ')')
+  .call(d3.axisLeft(y))
+  
+svg.append('text')
+  .attr('class','axisLabel')
+  .attr('x',fig.width/2 - fig.margin.right)
+  .attr('y', height)
+  .text('Project Start Year')
+;
+svg.append('text')
+  .attr('class','axisLabel')
+  .attr('x',0-height/1.5)
+  .attr('y', 12)
+  .attr('transform','rotate(-90)')
+  .text('Years to Complete')
+;
+//title
+svg.append('text')
+  .attr('class','axisLabel')
+  .attr('x',150)
+  .attr('y', fig.margin.bottom)
+  .text('Number of years for Transit Projects to complete')
+;
+  
+```
+
