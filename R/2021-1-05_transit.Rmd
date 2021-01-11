@@ -11,7 +11,7 @@ always_allow_html: true
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=F)
 sapply(c('tidyverse','tidytuesdayR','r2d3','here'), require, character.only=T)
-knitr::opts_knit$set(root.dir = here())
+# knitr::opts_knit$set(root.dir = here())
 ```
 
 ## Transit Cost Project
@@ -64,7 +64,7 @@ trans
 
 Visualize project timeline by year - simple.
 
-```{d3 data=trans, fig.show='hold'}
+```{d3 data=trans, screenshoot.force=TRUE}
 
 const fig = {
   margin: {top:50,right:20, bottom:20, left: 40}
@@ -136,7 +136,7 @@ svg.append('text')
   .attr('class','axisLabel')
   .attr('x',150)
   .attr('y', fig.margin.bottom)
-  .text('Number of years for Transit Projects to complete')
+  .text('Number of Years for Transit Projects to Complete')
 ;
   
 ```
