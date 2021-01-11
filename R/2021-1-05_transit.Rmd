@@ -64,7 +64,7 @@ trans
 
 Visualize project timeline by year - simple.
 
-```{d3 data=trans, results='hold'}
+```{d3 data=trans, fig.show='hold'}
 
 const fig = {
   margin: {top:50,right:20, bottom:20, left: 40}
